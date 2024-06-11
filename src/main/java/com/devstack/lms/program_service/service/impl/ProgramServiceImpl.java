@@ -2,10 +2,13 @@ package com.devstack.lms.program_service.service.impl;
 
 import com.devstack.lms.program_service.dto.requestDto.RequestProgramDto;
 import com.devstack.lms.program_service.entity.Program;
+import com.devstack.lms.program_service.entity.Subject;
 import com.devstack.lms.program_service.repo.ProgramRepository;
 import com.devstack.lms.program_service.service.ProgramService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 @Service
@@ -26,6 +29,13 @@ public class ProgramServiceImpl implements ProgramService {
                         .getSubjects()).build();
 
         //get All subject and need check if there are available or not
+
+
+     List<Long> ids= program.getSubjects().stream().map(Subject::getId).toList();
+     
+
+
+
         programRepository.save(program);
     }
 }
