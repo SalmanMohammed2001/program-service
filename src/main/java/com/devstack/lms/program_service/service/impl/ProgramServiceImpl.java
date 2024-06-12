@@ -1,10 +1,12 @@
 package com.devstack.lms.program_service.service.impl;
 
+import com.devstack.lms.program_service.dto.ResponseProgramDto;
 import com.devstack.lms.program_service.dto.requestDto.RequestProgramDto;
 import com.devstack.lms.program_service.entity.Program;
 import com.devstack.lms.program_service.entity.Subject;
 import com.devstack.lms.program_service.repo.ProgramRepository;
 import com.devstack.lms.program_service.service.ProgramService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,7 +23,8 @@ public class ProgramServiceImpl implements ProgramService {
 
 
     private final ProgramRepository programRepository;
-    private final WebClient webClient;
+    private final ProgramAspectServiceImpl programAspectService;
+
 
     @Override
     public void createProgram(RequestProgramDto programDto) {
@@ -43,10 +46,8 @@ public class ProgramServiceImpl implements ProgramService {
             list.add(sub.getId());
         }
 
-
         String ids= list.stream().map(Object::toString).collect(Collectors.joining(", "));
-       Boolean isOk=  webClient.get().uri("http://localhost:8082/api/v1/subjects/{id}",ids)
-                .retrieve().bodyToMono(Boolean.class).block();
+       Boolean isOk=  programAspectService.checkSubject(ids);
 
        if (Boolean.TRUE.equals(isOk)){
            programRepository.save(program);
@@ -55,5 +56,19 @@ public class ProgramServiceImpl implements ProgramService {
        }
 
 
+    }
+
+
+
+    @Override
+    public List<ResponseProgramDto> findAllProgram() {
+        List<Program> all = programRepository.findAll();
+
+    List<ResponseProgramDto>  responseProgramDtoList=   new ArrayList<>();
+        for (Program p:all) {
+            responseProgramDtoList.add(new ResponseProgramDto(
+                    p.getId(),p.getName(),p.getPrice(),p.getStartData(),p.getSubjects()));
+        }
+        return responseProgramDtoList;
     }
 }
